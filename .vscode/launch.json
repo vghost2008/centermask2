@@ -1,0 +1,25 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Training test",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args":["--config-file" "configs/centermask/centermask_V_39_eSE_FPN_ms_3x_test.yaml" "--num-gpus" "1"]
+        },
+        {
+            "name": "Python: eval test",
+            "justMyCode": true,
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args":["--config-file" "configs/centermask/centermask_V_39_eSE_FPN_ms_3x_test.yaml" "--eval-only" "--num-gpus" "1"]
+        },
+    
+}

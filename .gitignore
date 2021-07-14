@@ -34,7 +34,6 @@ dist/
 
 # Pycharm editor settings
 .idea
-.vscode
 .python-version
 
 # project dirs
