@@ -4,7 +4,10 @@ import logging
 import os
 from collections import OrderedDict
 import torch
-
+try:
+    from torch.utils.tensorboard import SummaryWriter
+except ModuleNotFoundError:
+    from tensorboardX import SummaryWriter
 import detectron2.utils.comm as comm
 from detectron2.data import MetadataCatalog
 from detectron2.engine import DefaultTrainer, default_argument_parser, default_setup, hooks, launch
@@ -121,9 +124,18 @@ def main(args):
 
     if args.eval_only:
         model = Trainer.build_model(cfg)
-        DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
+        '''input_names = ['image']
+        output_names = [ "output1" ]
+        dummy_input =[{'image':torch.zeros([3,256,256])}]
+        dummy_input =torch.zeros([3,256,256])
+        torch.onnx.export(model, dummy_input, "model.onnx", verbose=True, input_names=input_names,
+        output_names=output_names)'''
+        '''log_writer = SummaryWriter("./logs")
+        log_writer.add_graph(model,input_to_model=torch.randn([3,256,256]))'''
+        #wj debug
+        '''DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
             cfg.MODEL.WEIGHTS, resume=args.resume
-        )
+        )'''
         res = Trainer.test(cfg, model)
         if cfg.TEST.AUG.ENABLED:
             res.update(Trainer.test_with_TTA(cfg, model))
@@ -136,6 +148,7 @@ def main(args):
     consider writing your own training loop or subclassing the trainer.
     """
     trainer = Trainer(cfg)
+    print(f"Resume = {args.resume}")
     trainer.resume_or_load(resume=args.resume)
     if cfg.TEST.AUG.ENABLED:
         trainer.register_hooks(

@@ -45,3 +45,4 @@ dist/
 /debug
 /weights
 eval.sh
+logs
