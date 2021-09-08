@@ -8,18 +8,46 @@
             "name": "Python: Training test",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "train_net.py",
             "console": "integratedTerminal",
             "args":["--config-file" "configs/centermask/centermask_V_39_eSE_FPN_ms_3x_test.yaml" "--num-gpus" "1"]
         },
         {
+            "name": "Python: Training fast",
+            "type": "python",
+            "request": "launch",
+            "program": "train_net.py",
+            "console": "integratedTerminal",
+            "args":["--config-file" "configs/centermask/centermask_lite_V_39_eSE_FPN_ms_4x.yaml" "--num-gpus" "4"]
+        },
+        {
             "name": "Python: eval test",
-            "justMyCode": true,
+            "justMyCode": false,
+            "type": "python",
+            "request": "launch",
+            "program": "train_net.py",
+            "console": "integratedTerminal",
+            "args":["--config-file" "configs/centermask/centermask_V_39_eSE_FPN_ms_3x.yaml" "--eval-only" "--num-gpus" "1"]
+        },
+        {
+            "name": "Python: eval",
+            "justMyCode": false,
             "type": "python",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args":["--config-file" "configs/centermask/centermask_V_39_eSE_FPN_ms_3x_test.yaml" "--eval-only" "--num-gpus" "1"]
+            "args":["--config-file" "configs/centermask/centermask_V_99_eSE_FPN_ms_3x.yaml" "--eval-only" "--num-gpus" "1"]
+            //"args":["--config-file" "configs/centermask/panoptic_centermask_V_99_eSE_FPN_ms_3x.yaml" "--eval-only" "--num-gpus" "1"]
         },
+        {
+            "name": "Python: eval fast",
+            "justMyCode": false,
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args":["--config-file" "configs/centermask/centermask_lite_V_39_eSE_FPN_ms_4x.yaml" "--eval-only" "--num-gpus" "1"]
+        },
+    ]
     
 }

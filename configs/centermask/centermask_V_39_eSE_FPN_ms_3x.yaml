@@ -1,6 +1,6 @@
 _BASE_: "Base-CenterMask-VoVNet.yaml"
 MODEL:
-  WEIGHTS: "https://www.dropbox.com/s/q98pypf96rhtd8y/vovnet39_ese_detectron2.pth?dl=1"
+  WEIGHTS: "weights/centermask2-V-39-eSE-FPN-ms-3x.pth"
   VOVNET:
     CONV_BODY : "V-39-eSE"
 SOLVER:

@@ -1,6 +1,7 @@
 _BASE_: "Base-Panoptic-VoVNet-FPN.yaml"
 MODEL:
-  WEIGHTS: "https://www.dropbox.com/s/1mlv31coewx8trd/vovnet99_ese_detectron2.pth?dl=1"
+  #WEIGHTS: "https://www.dropbox.com/s/1mlv31coewx8trd/vovnet99_ese_detectron2.pth?dl=1"
+  WEIGHTS: "weights/panoptic_centermask_V_99_ms_3x.pth"
   VOVNET:
     CONV_BODY : "V-99-eSE"
 SOLVER:
