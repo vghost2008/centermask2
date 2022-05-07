@@ -2,8 +2,12 @@ import sys
 import os.path as osp
 sys.path.append(osp.dirname(osp.dirname(__file__)))
 from demo_toolkit import *
-from boedemo.predictor import VisualizationDemo
+from centermask2_demo.predictor import VisualizationDemo
 from centermask.config import get_cfg
+import wml_utils as wmlu
+import img_utils as wmli
+
+os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 
 pdir_path = osp.dirname(osp.dirname(__file__))
 cfg_file = osp.join(pdir_path,"configs/centermask/centermask_V_39_eSE_FPN_ms_3x.yaml")
@@ -25,15 +29,20 @@ class Model:
         return cfg
 
     def __call__(self, img):
+        img = wmli.resize_short_size(img,640)
         results,vis_img= self.model.run_on_image(img)
         img = vis_img.get_image()
         return img
 
 if __name__ == "__main__":
-    vd = VideoDemo(Model(),save_path="tmp.mp4",show_video=False)
-    vd.preprocess = lambda x:resize_short_size(x,640)
-    video_path = None
-    if len(sys.argv)>1:
-        video_path = sys.argv[1]
-    vd.inference_loop(video_path)
-    vd.close()
+    file_dir = "/home/wj/ai/mldata1/0day/wear"
+    save_dir = "outputs/vis"
+    wmlu.create_empty_dir(save_dir,remove_if_exists=False)
+    files = wmlu.recurse_get_filepath_in_dir(file_dir,suffix=".jpg")
+    model = Model()
+    for file in files:
+        print(file)
+        img = cv2.imread(file)
+        img = model(img)
+        save_path = osp.join(save_dir,osp.basename(file))
+        cv2.imwrite(save_path,img)

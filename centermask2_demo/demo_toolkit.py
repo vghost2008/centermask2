@@ -1,8 +1,10 @@
 import cv2
 import numpy as np
 import os
+import sys
+from centermask2_demo.vis_utils import *
 
-__version__ = "1.1.0"
+__version__ = "1.1.2"
 
 joints_pair = [[0 , 1], [1 , 2], [2 , 0], [1 , 3], [2 , 4], [3 , 5], [4 , 6], [5 , 6], [5 , 11],
 [6 , 12], [11 , 12], [5 , 7], [7 , 9], [6 , 8], [8 , 10], [11 , 13], [13 , 15], [12 , 14], [14 , 16]]
@@ -54,8 +56,9 @@ class BufferTextPainter:
         self.buffer_nr = buffer_len
         self.cur_text = ""
         self.cur_idx = 0
+        self.font = os.path.join(os.path.dirname(__file__),"simhei.ttf")
 
-    def putText(self,img,text,font_scale=1.2,text_color=(0,255,0)):
+    def putText(self,img,text,font_scale=20,text_color=(255,255,255)):
         img = np.ascontiguousarray(img)
         if text == "":
             if self.cur_idx == 0:
@@ -65,11 +68,10 @@ class BufferTextPainter:
             self.cur_text = text
 
         self.cur_idx = self.cur_idx-1
-        cv2.putText(img, self.cur_text, (0,100),
-                    cv2.FONT_HERSHEY_DUPLEX,
-                fontScale=font_scale,
-                color=text_color,
-                thickness=1)
+        img = draw_text(img,(12,12),self.cur_text,
+                        text_color=text_color,
+                        font_size=font_scale,
+                        font=self.font)
         return img
 
 def resize_height(img,h,interpolation=cv2.INTER_LINEAR):
@@ -92,7 +94,7 @@ def resize_short_size(img,size,interpolation=cv2.INTER_LINEAR):
         return resize_width(img,size,interpolation)
 
 class VideoDemo:
-    def __init__(self,model,fps=30,save_path=None,buffer_size=0,show_video=True) -> None:
+    def __init__(self,model,fps=30,save_path=None,buffer_size=0,show_video=True,max_frame_cn=None,interval=None) -> None:
         self.model = model
         self.fps = fps
         self.save_path = save_path
@@ -103,6 +105,8 @@ class VideoDemo:
         self.video_writer = None
         self.show_video = show_video
         self.preprocess = None
+        self.max_frame_cn = max_frame_cn
+        self.interval = interval
         print(f"Demo toolkit version {__version__}.")
     
     def __del__(self):
@@ -124,6 +128,8 @@ class VideoDemo:
             print(f"Use video file {self.video_path}")
             self.video_reader = cv2.VideoCapture(self.video_path)
             self.frame_cnt = int(self.video_reader.get(cv2.CAP_PROP_FRAME_COUNT))
+            if self.max_frame_cn is not None and self.max_frame_cn>1:
+                self.frame_cnt = min(self.frame_cnt,self.max_frame_cn)
         else:
             if self.video_path is not None:
                 vc = int(self.video_path)
@@ -149,8 +155,15 @@ class VideoDemo:
         self.video_path = video_path
         self.init_reader()
         self.init_writer()
+        idx = 0
+
         print(f"Press Esc to escape.")
+
         while True:
+            idx += 1
+            if self.interval is not None and self.interval>1:
+                if idx%self.interval != 0:
+                    continue
             ret,frame = self.video_reader.read()
             if not ret:
                 break
@@ -162,7 +175,11 @@ class VideoDemo:
                 cv2.imshow("video",img[...,::-1])
                 if cv2.waitKey(30)&0xFF == 27:
                     break
-    
+            if self.frame_cnt > 1:
+                sys.stdout.write(f"{idx}/{self.frame_cnt}  {idx*100/self.frame_cnt:.3f}%.\r")
+                if idx>self.frame_cnt:
+                    break
+
     def inference(self,img):
         if self.buffer_size <= 1:
             r_img = self.inference_single_img(img)

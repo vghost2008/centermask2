@@ -4,11 +4,19 @@ import cv2
 import torch
 import matplotlib.pyplot as plt
 from detectron2.data import MetadataCatalog
-from detectron2.engine.defaults import DefaultPredictor
+from detectron2.engine.defaults import DefaultPredictor,SimplePredictor
 from detectron2.utils.visualizer import ColorMode, Visualizer
+from centermask.config import get_cfg
+import os.path as osp
+import torch.nn as nn
+
+pdir_path = osp.dirname(osp.dirname(__file__))
+cfg_file = osp.join(pdir_path,"configs/centermask/centermask_V_39_eSE_FPN_ms_3x.yaml")
+
 
 class VisualizationDemo(object):
-    def __init__(self, cfg, instance_mode=ColorMode.IMAGE):
+    def __init__(self, cfg, instance_mode=ColorMode.SEGMENTATION):
+        #ColorMode.IMAGE
         """
         Args:
             cfg (CfgNode):
@@ -35,6 +43,7 @@ class VisualizationDemo(object):
             vis_output (VisImage): the visualized image output.
         """
         vis_output = None
+        image = image[...,::-1]
         predictions = self.predictor(image)
         # Convert image from OpenCV BGR format to Matplotlib RGB format.
         image = image[:, :, ::-1]
@@ -74,3 +83,47 @@ class VisualizationDemo(object):
             basis_viz = cv2.cvtColor(basis_viz, cv2.COLOR_HSV2RGB)
             axes[i // 2][i % 2].imshow(basis_viz)
         plt.show()
+
+class InferenceModel(nn.Module):
+    def __init__(self, cfg=None, instance_mode=ColorMode.SEGMENTATION):
+        #ColorMode.IMAGE
+        """
+        Args:
+            cfg (CfgNode):
+            instance_mode (ColorMode):
+            parallel (bool): whether to run the model in different processes from visualization.
+                Useful since the visualization logic can be slow.
+        """
+        super().__init__()
+        if cfg is None:
+            cfg = self.setup_cfg()
+        self.cpu_device = torch.device("cpu")
+        self.instance_mode = instance_mode
+
+        self.predictor = SimplePredictor(cfg)
+        self.add_module("model",self.predictor.model)
+
+    def setup_cfg(self):
+        cfg = get_cfg()
+        cfg.merge_from_file(cfg_file)
+        cfg.MODEL.RETINANET.SCORE_THRESH_TEST = 0.4
+        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.4
+        cfg.MODEL.FCOS.INFERENCE_TH_TEST = 0.4
+        cfg.MODEL.PANOPTIC_FPN.COMBINE.INSTANCES_CONFIDENCE_THRESH = 0.4
+        cfg.MODEL.WEIGHTS = osp.join(pdir_path,cfg.MODEL.WEIGHTS)
+        cfg.freeze()
+        return cfg
+
+    def forward(self, image):
+        """
+        Args:
+            image (np.ndarray): an image of shape (H, W, C) (in BGR order).
+                This is the format used by OpenCV.
+
+        Returns:
+            predictions (dict): the output of the model.
+            vis_output (VisImage): the visualized image output.
+        """
+        with torch.no_grad():
+            predictions = self.predictor(image)
+        return predictions
